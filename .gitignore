@@ -1,0 +1,22 @@
+# Environment
+.env
+
+# Output images
+output/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+*.xlsx
+copilot-instructions.md
