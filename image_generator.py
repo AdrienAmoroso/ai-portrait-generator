@@ -1,12 +1,10 @@
 """Generate images via the Google Gemini API."""
 
 import logging
-from io import BytesIO
 from pathlib import Path
 
 from google import genai
 from google.genai import types
-from PIL import Image
 
 from config import GEMINI_API_KEY, GEMINI_MODEL, IMAGE_FORMAT
 
@@ -35,22 +33,23 @@ def generate_image(prompt: str, output_path: Path) -> bool:
     try:
         response = client.models.generate_content(
             model=GEMINI_MODEL,
-            contents=prompt,
+            contents=[prompt],
             config=types.GenerateContentConfig(
-                response_modalities=["IMAGE"],
+                response_modalities=["TEXT", "IMAGE"],
+                image_config=types.ImageConfig(
+                    aspect_ratio="1:1",
+                    image_size="512",
+                ),
             ),
         )
 
-        # Extract image data from response
-        if not response.candidates or not response.candidates[0].content.parts:
-            logger.error("No image returned for %s", output_path.name)
-            return False
-
-        for part in response.candidates[0].content.parts:
-            if part.inline_data is not None:
-                image = Image.open(BytesIO(part.inline_data.data))
+        # Extract image from response parts
+        for part in response.parts:
+            if part.text is not None:
+                logger.info("Model response for %s: %s", output_path.name, part.text)
+            elif image := part.as_image():
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                image.save(output_path, format=IMAGE_FORMAT)
+                image.save(str(output_path))
                 logger.info("Saved %s", output_path)
                 return True
 

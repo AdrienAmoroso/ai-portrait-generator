@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # --- Paths ---
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -14,7 +14,7 @@ OUTPUT_DIR = PROJECT_DIR / "output"
 
 # --- Gemini API ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = "gemini-2.5-flash-image"
+GEMINI_MODEL = "gemini-3.1-flash-image-preview"
 
 # --- Image generation ---
 IMAGE_FORMAT = "PNG"
