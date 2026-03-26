@@ -3,8 +3,8 @@
 Automated AI image generation pipeline for realistic player portraits. Reads prompts from an Excel/CSV spreadsheet, generates images, runs QA checks, removes backgrounds, and exports transparent PNGs.
 
 Supports two backends:
-- **Google Gemini API** — cloud-based generation via `gemini-3.1-flash-image-preview`
-- **ComfyUI** — local SDXL + ControlNet OpenPose for full control over generation
+- **Google Gemini API** - cloud-based generation via `gemini-3.1-flash-image-preview`
+- **ComfyUI** - local SDXL + ControlNet OpenPose for full control over generation
 
 ## Pipeline
 
@@ -12,13 +12,13 @@ Supports two backends:
 Excel/CSV → Prompt Builder → Image Generation → QA Checks → Background Removal → Final PNG
 ```
 
-1. **Data loading** — reads player rows from `.xlsx` or `.csv`
-2. **Prompt building** — sanitizes text (removes brands, fixes clothing terms), injects per-player variety (lighting, expression)
-3. **Generation** — dispatches to Gemini or ComfyUI
-4. **QA checks** — face framing (MediaPipe), text/logo detection (EasyOCR), unwanted object detection (CLIP)
-5. **Retry** — failed QA triggers regeneration with a different seed (configurable max retries)
-6. **Background removal** — removes background via U2-Net ONNX model (rembg)
-7. **Reporting** — QA results exported to `output/qa_report.csv`
+1. **Data loading** - reads player rows from `.xlsx` or `.csv`
+2. **Prompt building** - sanitizes text (removes brands, fixes clothing terms), injects per-player variety (lighting, expression)
+3. **Generation** - dispatches to Gemini or ComfyUI
+4. **QA checks** - face framing (MediaPipe), text/logo detection (EasyOCR), unwanted object detection (CLIP)
+5. **Retry** - failed QA triggers regeneration with a different seed (configurable max retries)
+6. **Background removal** - removes background via U2-Net ONNX model (rembg)
+7. **Reporting** - QA results exported to `output/qa_report.csv`
 
 ## Setup
 
