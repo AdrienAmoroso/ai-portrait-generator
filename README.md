@@ -1,4 +1,4 @@
-# GenerationImageIA
+# AI Portrait Generator
 
 Automated AI image generation pipeline for realistic player portraits. Reads prompts from an Excel/CSV spreadsheet, generates images, runs QA checks, removes backgrounds, and exports transparent PNGs.
 
