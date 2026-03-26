@@ -22,7 +22,24 @@ Excel/CSV → Prompt Builder → Image Generation → QA Checks → Background R
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Create and activate a virtual environment
+
+All dependencies must be installed inside a virtual environment, **not** system-wide.
+
+```bash
+# Create the venv (first time only)
+python -m venv .venv
+
+# Activate it (run this every time you open a new terminal)
+# Windows PowerShell:
+.venv\Scripts\Activate.ps1
+# Windows CMD:
+.venv\Scripts\activate.bat
+# macOS / Linux:
+source .venv/bin/activate
+```
+
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -34,7 +51,7 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 pip install transformers
 ```
 
-### 2. Configure environment
+### 3. Configure environment
 
 ```bash
 cp .env.example .env
@@ -42,11 +59,11 @@ cp .env.example .env
 
 Edit `.env` and set your API key and preferred backend. See [.env.example](.env.example) for all available variables.
 
-### 3. Download MediaPipe model
+### 4. Download MediaPipe model
 
 Download [blaze_face_short_range.tflite](https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/latest/blaze_face_short_range.tflite) and place it in the project root.
 
-### 4. Place your input file
+### 5. Place your input file
 
 Put your Excel (`.xlsx`) or CSV file in the project root. The expected columns are:
 
