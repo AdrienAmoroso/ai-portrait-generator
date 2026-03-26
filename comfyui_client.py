@@ -25,7 +25,7 @@ from config import (
 logger = logging.getLogger(__name__)
 
 
-def _pick_pose(player_id: int, gender: str = "") -> Path | None:
+def pick_pose(player_id: int, gender: str = "") -> Path | None:
     """Deterministically pick a pose image for a player.
 
     Looks in ``poses/men/`` or ``poses/women/`` based on *gender*,
@@ -249,7 +249,7 @@ def generate_comfyui(
     """
 
     try:
-        pose_path = _pick_pose(player_id, gender)
+        pose_path = pick_pose(player_id, gender)
         if pose_path is not None:
             logger.info("Using pose reference: %s", pose_path.name)
             _upload_pose_image(pose_path)

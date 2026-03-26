@@ -32,8 +32,12 @@ def _generate_gemini(
     output_path: Path,
     player_id: int,
     seed: int | None = None,
+    gender: str = "",
 ) -> bool:
     from google.genai import types
+    from PIL import Image as PILImage
+
+    from comfyui_client import pick_pose
 
     client = _get_gemini_client()
 
@@ -46,10 +50,24 @@ def _generate_gemini(
     )
     full_prompt = positive_prompt + anti_logo
 
+    # Build multimodal contents: optional pose reference + text prompt
+    contents: list = []
+    pose_path = pick_pose(player_id, gender)
+    if pose_path is not None:
+        pose_img = PILImage.open(pose_path)
+        contents.append(pose_img)
+        contents.append(
+            full_prompt
+            + "\n\nMatch the body pose and framing shown in the reference image above."
+        )
+        logger.info("Using pose reference: %s", pose_path.name)
+    else:
+        contents.append(full_prompt)
+
     try:
         response = client.models.generate_content(
             model=GEMINI_MODEL,
-            contents=[full_prompt],
+            contents=contents,
             config=types.GenerateContentConfig(
                 response_modalities=["TEXT", "IMAGE"],
                 image_config=types.ImageConfig(
@@ -104,5 +122,6 @@ def generate_image(
         )
 
     return _generate_gemini(
-        positive_prompt, negative_prompt, output_path, player_id, seed
+        positive_prompt, negative_prompt, output_path, player_id, seed,
+        gender=gender,
     )
