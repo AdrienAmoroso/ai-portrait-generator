@@ -4,6 +4,9 @@
 # Output images
 output/
 
+# MediaPipe model
+*.tflite
+
 # Python
 __pycache__/
 *.pyc
@@ -18,5 +21,11 @@ build/
 *.swp
 *.swo
 
+# Input data (user-specific)
 *.xlsx
+*.csv
+
 copilot-instructions.md
+
+# Pose reference images (user-specific)
+poses/

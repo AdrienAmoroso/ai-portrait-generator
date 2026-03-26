@@ -2,3 +2,15 @@ google-genai>=1.0.0
 openpyxl>=3.1.0
 Pillow>=10.0.0
 python-dotenv>=1.0.0
+
+# QA checks
+mediapipe>=0.10.0
+easyocr>=1.7.0
+numpy>=1.24.0
+
+# Background removal
+rembg[gpu]>=2.0.0
+
+# CLIP object detection (QA)
+# Install PyTorch first: pip install torch --index-url https://download.pytorch.org/whl/cu126
+transformers>=4.30.0

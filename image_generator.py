@@ -1,21 +1,23 @@
-"""Generate images via the Google Gemini API."""
+"""Image generation — dispatches to Gemini API or ComfyUI backend."""
 
 import logging
 from pathlib import Path
 
-from google import genai
-from google.genai import types
-
-from config import GEMINI_API_KEY, GEMINI_MODEL, IMAGE_FORMAT
+import config
+from config import GEMINI_API_KEY, GEMINI_MODEL
 
 logger = logging.getLogger(__name__)
 
-_client: genai.Client | None = None
+_client = None
 
 
-def _get_client() -> genai.Client:
+# Gemini backend
+
+def _get_gemini_client():
     global _client
     if _client is None:
+        from google import genai
+
         if not GEMINI_API_KEY:
             raise RuntimeError(
                 "GEMINI_API_KEY is not set. Add it to your .env file."
@@ -24,16 +26,30 @@ def _get_client() -> genai.Client:
     return _client
 
 
-def generate_image(prompt: str, output_path: Path) -> bool:
-    """Call Gemini to generate an image from *prompt* and save it to *output_path*.
+def _generate_gemini(
+    positive_prompt: str,
+    negative_prompt: str,
+    output_path: Path,
+    player_id: int,
+    seed: int | None = None,
+) -> bool:
+    from google.genai import types
 
-    Returns True on success, False on failure (logged).
-    """
-    client = _get_client()
+    client = _get_gemini_client()
+
+    # Gemini has no negative prompt API — embed constraints in the prompt
+    anti_logo = (
+        "\n\nIMPORTANT: The clothing must be completely plain and unbranded. "
+        "Do NOT add any logos, brand names, text, letters, symbols, swooshes, "
+        "stripes, or sponsor markings anywhere on the clothing or image. "
+        "All garments should be simple solid colors with no embroidery or prints."
+    )
+    full_prompt = positive_prompt + anti_logo
+
     try:
         response = client.models.generate_content(
             model=GEMINI_MODEL,
-            contents=[prompt],
+            contents=[full_prompt],
             config=types.GenerateContentConfig(
                 response_modalities=["TEXT", "IMAGE"],
                 image_config=types.ImageConfig(
@@ -43,7 +59,10 @@ def generate_image(prompt: str, output_path: Path) -> bool:
             ),
         )
 
-        # Extract image from response parts
+        if not response.parts:
+            logger.error("Gemini returned empty response for %s", output_path.name)
+            return False
+
         for part in response.parts:
             if part.text is not None:
                 logger.info("Model response for %s: %s", output_path.name, part.text)
@@ -57,5 +76,33 @@ def generate_image(prompt: str, output_path: Path) -> bool:
         return False
 
     except Exception:
-        logger.exception("Failed to generate image for %s", output_path.name)
+        logger.exception("Gemini generation failed for %s", output_path.name)
         return False
+
+
+# Public API
+
+def generate_image(
+    positive_prompt: str,
+    negative_prompt: str,
+    output_path: Path,
+    player_id: int,
+    seed: int | None = None,
+    gender: str = "",
+) -> bool:
+    """Generate an image and save it to *output_path*.
+
+    Dispatches to Gemini or ComfyUI based on the ``BACKEND`` config value.
+    Returns True on success, False on failure.
+    """
+    if config.BACKEND == "comfyui":
+        from comfyui_client import generate_comfyui
+
+        return generate_comfyui(
+            positive_prompt, negative_prompt, output_path, player_id, seed,
+            gender=gender,
+        )
+
+    return _generate_gemini(
+        positive_prompt, negative_prompt, output_path, player_id, seed
+    )
