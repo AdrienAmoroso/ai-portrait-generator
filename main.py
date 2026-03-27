@@ -75,6 +75,11 @@ def parse_args() -> argparse.Namespace:
         default="all",
         help="Comma-separated QA checks to run: face,ocr,clip or 'all'.",
     )
+    parser.add_argument(
+        "--skip-poses",
+        action="store_true",
+        help="Skip pose references even if images are available.",
+    )
     return parser.parse_args()
 
 
@@ -97,6 +102,11 @@ def main() -> None:
     if args.backend:
         import config as _cfg
         _cfg.BACKEND = args.backend
+
+    # Allow CLI override of pose references
+    if args.skip_poses:
+        import config as _cfg
+        _cfg.USE_POSE_REFERENCES = False
 
     # Re-read after potential override
     from config import BACKEND as active_backend

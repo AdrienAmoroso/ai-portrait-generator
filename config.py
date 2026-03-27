@@ -51,6 +51,10 @@ SHOULDERLINE_TOLERANCE = 0.20  # ±20%
 # Background removal
 BG_REMOVAL_ENABLED = os.getenv("BG_REMOVAL_ENABLED", "true").lower() == "true"
 
+# Pose references
+USE_POSE_REFERENCES = os.getenv("USE_POSE_REFERENCES", "true").lower() == "true"
+BLUR_POSE_FACES = os.getenv("BLUR_POSE_FACES", "true").lower() == "true"
+
 # Input file columns (1-indexed)
 COL_ID = 1
 COL_GENDER = 2
