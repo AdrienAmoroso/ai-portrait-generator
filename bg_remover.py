@@ -1,11 +1,10 @@
-"""Background removal via U2-Net ONNX (rembg, no pymatting dependency)."""
+"""Background removal via rembg with birefnet-portrait model."""
 
 import logging
-import os
-from contextlib import contextmanager
+import warnings
+from io import BytesIO
 from pathlib import Path
 
-import numpy as np
 from PIL import Image
 
 logger = logging.getLogger(__name__)
@@ -14,61 +13,43 @@ logger = logging.getLogger(__name__)
 _session = None
 
 
-@contextmanager
-def _suppress_native_stderr():
-    """Temporarily redirect the native stderr fd to devnull."""
-    devnull = os.open(os.devnull, os.O_WRONLY)
-    old_stderr = os.dup(2)
-    os.dup2(devnull, 2)
-    try:
-        yield
-    finally:
-        os.dup2(old_stderr, 2)
-        os.close(old_stderr)
-        os.close(devnull)
-
-
 def _get_session():
-    """Lazy-load the rembg ONNX session (U2-Net by default)."""
+    """Lazy-load the rembg birefnet-portrait session."""
     global _session
     if _session is None:
-        import onnxruntime as ort
-
-        # Suppress ONNX Runtime native warnings (CUDA provider load errors)
-        ort.set_default_logger_severity(4)  # FATAL only
-
-        from rembg.sessions import U2netSession
-
-        opts = ort.SessionOptions()
-        with _suppress_native_stderr():
-            _session = U2netSession("u2net", opts)
+        from rembg import new_session
+        _session = new_session(model_name="birefnet-portrait")
     return _session
 
 
 def remove_background(input_path: Path, output_path: Path) -> bool:
     """Remove the background from an image and save as transparent PNG.
 
-    Uses the rembg U2-Net ONNX model directly, bypassing the pymatting
-    dependency which has compatibility issues with Python 3.14.
+    Uses the rembg birefnet-portrait model, optimized for portrait images.
 
     Returns True on success, False on failure.
     """
     try:
+        from rembg import remove
+
         session = _get_session()
 
-        img = Image.open(input_path).convert("RGB")
+        image = Image.open(input_path)
+        if image.mode in ("P", "L", "LA"):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                image = image.convert("RGBA")
 
-        # Run the model: get alpha mask
-        masks = session.predict(img)
-        # masks is a list of PIL images; take the first one
-        mask = masks[0].convert("L").resize(img.size, Image.LANCZOS)
+        buf = BytesIO()
+        image.save(buf, format="PNG")
+        buf.seek(0)
 
-        # Apply mask as alpha channel
-        result = img.convert("RGBA")
-        result.putalpha(mask)
+        output_data = remove(buf.read(), session=session)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        result.save(str(output_path), "PNG")
+        with open(output_path, "wb") as f:
+            f.write(output_data)
+
         logger.info("Background removed → %s", output_path)
         return True
 
